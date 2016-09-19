@@ -48,26 +48,16 @@ app.service("GroceryService", function () {
 
 
     groceryService.getItemByID = function (id) {
+
+        //check to see if item exists in list
         for (var anItem in groceryService.groceryItems) {
+
             if (groceryService.groceryItems[anItem].id === id)
                 return groceryService.groceryItems[anItem];
-        }
-    };
-
-    groceryService.getNewID = function () {
-        if (groceryService.newID) {
-            groceryService.newID++;
-            return groceryService.newID;
-        } else {
-            var maxID = _.max(groceryService.groceryItems, function (entry) {
-                return entry.id;
-            });
-            groceryService.newID = maxID.id + 1;
-            console.log(groceryService.newID);
-            return groceryService.newID;
 
         }
     };
+
 
     groceryService.removeItem = function (entry) {
         var index = groceryService.groceryItems.indexOf(entry);
@@ -78,6 +68,8 @@ app.service("GroceryService", function () {
 
         var updatedItem = groceryService.getItemByID(itemEntry.id);
 
+        //if item exists in list, update item with new info
+        //otherwise, get the next available id, assign it to item, then add to list
         if (updatedItem) {
             updatedItem.completed = itemEntry.completed;
             updatedItem.itemName = itemEntry.itemName;
@@ -87,6 +79,25 @@ app.service("GroceryService", function () {
             groceryService.groceryItems.push(itemEntry);
         }
     };
+
+    groceryService.getNewID = function () {
+
+        if (groceryService.newID) {
+            groceryService.newID++;
+            return groceryService.newID;
+
+        } else {
+
+            var maxID = _.max(groceryService.groceryItems, function (entry) {
+                return entry.id;
+            });
+
+            groceryService.newID = maxID.id + 1;
+            return groceryService.newID;
+
+        }
+    };
+
 
     return groceryService;
 });
@@ -99,29 +110,31 @@ app.controller("GroceryListController", ["$scope", "$routeParams", "GroceryServi
 
     $scope.Items = GroceryService.groceryItems;
 
-
+    //When grocery list checkbox is checked, strike though the list item name
     $scope.markCompleted = function (entry) {
         GroceryService.markCompleted(entry);
     };
 
-
+    //when trash can button is clicked, remove the item from the list
     $scope.removeItem = function (entry) {
         GroceryService.removeItem(entry);
     };
 
+
     if (!$routeParams.id) {
-        $scope.Item = {id: 0, completed: true, itemName: "", date: new Date()};
+        $scope.Item = {id: 0, completed: false, itemName: "", date: new Date()};
     } else {
         $scope.Item = _.clone(GroceryService.getItemByID(parseInt($routeParams.id)));
     }
 
-
+    //When save button is clicked, update the list
     $scope.save = function () {
         GroceryService.save($scope.Item);
         $location.path("/");
     };
 }]);
 
+//custom html tag for each grocery item
 app.directive("rjdGroceryItem", function () {
     return {
         restrict: "E",
